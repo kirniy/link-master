@@ -1,122 +1,144 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { ExternalLink, Copy, Check, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useStore, UrlList } from '@/lib/store';
-import { useTranslation } from '@/hooks/use-translation';
-import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
+import { useEffect } from "react"
+import { useParams, Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
+import { useStore } from "@/lib/store"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/use-toast"
+import { ExternalLink, ArrowLeft } from "lucide-react"
 
 export function UrlListViewer() {
-  const { t } = useTranslation();
-  const { toast } = useToast();
-  const { id } = useParams<{ id: string }>();
-  const getList = useStore((state) => state.getList);
-  const [list, setList] = useState<UrlList | undefined>();
-  const [copied, setCopied] = useState(false);
+  const { t } = useTranslation()
+  const { id } = useParams<{ id: string }>()
+  const { linkList, loading, error, getList } = useStore()
 
   useEffect(() => {
     if (id) {
-      setList(getList(id));
+      getList(id).catch((error) => {
+        toast({
+          title: t("error"),
+          description: (error as Error).message,
+          variant: "destructive"
+        })
+      })
     }
-  }, [id, getList]);
+  }, [id, getList, t])
 
-  if (!list) {
+  if (loading) {
+    return <div className="text-center">{t("loading")}</div>
+  }
+
+  if (error) {
+    return <div className="text-center text-destructive">{error}</div>
+  }
+
+  if (!linkList) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh]">
-        <h2 className="text-2xl font-bold mb-4">List not found</h2>
-        <Button asChild>
+      <div className="text-center space-y-4">
+        <div>{t("listNotFound")}</div>
+        <Button asChild variant="outline">
           <Link to="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Go back home
+            {t("backToHome")}
           </Link>
         </Button>
       </div>
-    );
+    )
   }
 
   const openAllUrls = () => {
-    list.urls.forEach(({ url }) => {
-      window.open(url, '_blank');
-    });
-  };
+    const urls = linkList.urls.map(({ url }) => url)
+    
+    // Request permission to open multiple tabs
+    const confirmed = window.confirm(
+      t("openMultipleTabsConfirm", { count: urls.length })
+    )
+    
+    if (confirmed) {
+      urls.forEach((url) => {
+        try {
+          window.open(url, "_blank", "noopener,noreferrer")
+        } catch (error) {
+          console.error(`Failed to open URL: ${url}`, error)
+        }
+      })
+    }
+  }
 
-  const copyShareLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    toast({
-      title: t('copied'),
-      duration: 2000,
-    });
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const copyShareableLink = () => {
+    const url = window.location.href
+    navigator.clipboard.writeText(url).then(
+      () => {
+        toast({
+          title: t("linkCopied"),
+          description: t("linkCopiedDescription")
+        })
+      },
+      (err) => {
+        console.error("Failed to copy link:", err)
+        toast({
+          title: t("error"),
+          description: t("copyLinkError"),
+          variant: "destructive"
+        })
+      }
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <Link to="/" className="text-muted-foreground hover:text-foreground inline-flex items-center mb-2">
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+        <div className="space-y-1">
+          <Link to="/" className="text-muted-foreground hover:text-foreground inline-flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to home
+            {t("backToHome")}
           </Link>
-          <h1 className="text-3xl font-bold">{list.name}</h1>
+          <h1 className="text-2xl font-bold">{linkList.name}</h1>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={copyShareLink} className="w-full sm:w-auto">
-            {copied ? (
-              <Check className="mr-2 h-4 w-4" />
-            ) : (
-              <Copy className="mr-2 h-4 w-4" />
-            )}
-            {t('copy')}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={copyShareableLink}>
+            {t("copyLink")}
           </Button>
-          <Button onClick={openAllUrls} className="w-full sm:w-auto">
+          <Button onClick={openAllUrls}>
             <ExternalLink className="mr-2 h-4 w-4" />
-            {t('openAll')}
+            {t("openAll")}
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-4">
-        {list.urls.map(({ url, comment }, index) => (
-          <Card key={index} className="overflow-hidden">
-            <CardHeader className="p-4">
-              <CardTitle className="flex items-center justify-between text-base">
+      <div className="space-y-4">
+        {linkList.urls.map(({ url, comment }, index) => (
+          <div key={index} className="p-4 border rounded-lg">
+            <div className="flex items-center justify-between gap-4">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline break-all"
+              >
+                {url}
+              </a>
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="shrink-0"
+              >
                 <a
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline truncate mr-2"
+                  aria-label={t("openInNewTab")}
                 >
-                  {url}
+                  <ExternalLink className="h-4 w-4" />
                 </a>
-                <Button variant="ghost" size="icon" asChild className="shrink-0">
-                  <a href={url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </Button>
-              </CardTitle>
-              {comment && (
-                <CardDescription className="mt-1 line-clamp-2">
-                  {comment}
-                </CardDescription>
-              )}
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="aspect-video bg-muted">
-                <iframe
-                  src={url}
-                  title={url}
-                  className="w-full h-full"
-                  sandbox="allow-same-origin"
-                  loading="lazy"
-                />
-              </div>
-            </CardContent>
-          </Card>
+              </Button>
+            </div>
+            {comment && (
+              <p className="mt-2 text-muted-foreground">{comment}</p>
+            )}
+          </div>
         ))}
       </div>
     </div>
-  );
+  )
 }
