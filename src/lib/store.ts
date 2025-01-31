@@ -48,34 +48,34 @@ export const useStore = create<Store>()(
           
           if (userError) {
             console.error('Error getting user:', userError);
-            // Continue without user, as it's optional
-          }
-          
-          // If there's a user, add their ID to the list
-          if (user) {
+            // Continue without user, storing only locally
+          } else if (user) {
+            // If there's a user, add their ID to the list and try to save to Supabase
             newList.user_id = user.id;
-          }
-          
-          const { data, error } = await supabase
-            .from('url_lists')
-            .insert([newList])
-            .select()
-            .single();
+            
+            const { data, error } = await supabase
+              .from('url_lists')
+              .insert([newList])
+              .select()
+              .single();
 
-          if (error) {
-            console.error('Error saving to Supabase:', error);
-            throw new Error(`Failed to save list: ${error.message}`);
+            if (error) {
+              console.error('Error saving to Supabase:', error);
+              // Continue with local storage only
+            } else if (!data) {
+              console.warn('No data returned from Supabase after insert');
+              // Continue with local storage only
+            }
           }
 
-          if (!data) {
-            throw new Error('No data returned from Supabase after insert');
-          }
-
+          // Always store locally
           set((state) => ({ lists: [...state.lists, newList] }));
           return id;
         } catch (error) {
           console.error('Error in addList:', error);
-          throw error;
+          // If there's an error with Supabase, still try to store locally
+          set((state) => ({ lists: [...state.lists, newList] }));
+          return id;
         }
       },
       getList: (id) => {

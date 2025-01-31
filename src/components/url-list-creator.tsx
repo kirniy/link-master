@@ -27,9 +27,9 @@ const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   bulkUrls: z.string(),
   urls: z.array(z.object({
-    url: z.string().regex(urlRegex, 'Invalid URL'),
-    comment: z.string().optional(),
-  })).optional(),
+    url: z.string().regex(urlRegex, { message: 'Invalid URL' }),
+    comment: z.string().optional().default(''),
+  })).optional().default([{ url: '', comment: '' }]),
 });
 
 export function UrlListCreator() {
@@ -39,7 +39,7 @@ export function UrlListCreator() {
   const navigate = useNavigate();
   const [showIndividual, setShowIndividual] = useState(false);
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
@@ -48,12 +48,17 @@ export function UrlListCreator() {
     },
   });
 
+  console.log('Form state:', form.formState);
+
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    console.log('onSubmit called with data:', data);
     try {
       let urls = [];
       if (showIndividual) {
         urls = data.urls?.filter(({ url }) => url.trim()) || [];
+        console.log('Individual mode URLs:', urls);
       } else {
+        console.log('Processing bulk URLs:', data.bulkUrls);
         urls = data.bulkUrls
           .split(/[\n\r]+/)
           .map(url => {
@@ -61,6 +66,7 @@ export function UrlListCreator() {
             if (!url.startsWith('http')) {
               url = 'https://' + url;
             }
+            console.log('Processing URL:', url);
             return url;
           })
           .filter(url => {
@@ -72,9 +78,11 @@ export function UrlListCreator() {
           })
           .slice(0, 50)
           .map(url => ({ url, comment: '' }));
+        console.log('Final processed URLs:', urls);
       }
 
       if (urls.length === 0) {
+        console.warn('No valid URLs found');
         form.setError('bulkUrls', {
           type: 'manual',
           message: t('atLeastOneUrl'),
@@ -82,26 +90,15 @@ export function UrlListCreator() {
         return;
       }
 
-      try {
-        const id = await addList({ name: data.name, urls });
-        navigate(`/list/${id}`);
-      } catch (error) {
-        console.error('Error saving list:', error);
-        let errorMessage = 'Error saving list';
-        if (error instanceof Error) {
-          errorMessage = error.message;
-        }
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive',
-        });
-      }
+      console.log('Calling addList with:', { name: data.name, urls });
+      const id = await addList({ name: data.name, urls });
+      console.log('List saved successfully with ID:', id);
+      navigate(`/list/${id}`);
     } catch (error) {
-      console.error('Error processing URLs:', error);
+      console.error('Error in onSubmit:', error);
       toast({
         title: 'Error',
-        description: 'Failed to process URLs. Please check your input and try again.',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
         variant: 'destructive',
       });
     }
@@ -130,7 +127,26 @@ export function UrlListCreator() {
     <div className="max-w-4xl mx-auto w-full px-4">
       <Card className="p-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              console.log('Form submitted');
+              const formData = form.getValues();
+              console.log('Form data:', formData);
+              const errors = form.formState.errors;
+              console.log('Form errors:', errors);
+              
+              if (Object.keys(errors).length > 0) {
+                console.log('Form validation failed');
+                return;
+              }
+
+              onSubmit(formData).catch(error => {
+                console.error('Form submission error:', error);
+              });
+            }} 
+            className="space-y-6"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -247,7 +263,10 @@ export function UrlListCreator() {
               >
                 {showIndividual ? t('switchToBulk') : t('switchToIndividual')}
               </Button>
-              <Button type="submit" className="w-full sm:w-auto">
+              <Button 
+                type="submit" 
+                className="w-full sm:w-auto"
+              >
                 {t('save')}
               </Button>
             </div>
