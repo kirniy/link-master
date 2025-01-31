@@ -1,30 +1,28 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useStore } from '@/lib/store';
-import { Language } from '@/lib/translations';
-import { useTranslation } from '@/hooks/use-translation';
+import { useTranslation } from "react-i18next"
+import { Button } from "@/components/ui/button"
+
+const languages = {
+  en: { nativeName: "English" },
+  ru: { nativeName: "Русский" },
+}
 
 export function LanguageSwitcher() {
-  const { t } = useTranslation();
-  const [language, setLanguage] = useStore((state) => [
-    state.language,
-    state.setLanguage,
-  ]);
+  const { i18n } = useTranslation()
 
   return (
-    <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-      <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder={t('language')} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="en">English</SelectItem>
-        <SelectItem value="ru">Русский</SelectItem>
-      </SelectContent>
-    </Select>
-  );
+    <div className="flex gap-x-2">
+      {Object.keys(languages).map((lng) => (
+        <Button
+          key={lng}
+          variant={i18n.resolvedLanguage === lng ? "default" : "outline"}
+          type="submit"
+          onClick={() => {
+            i18n.changeLanguage(lng)
+          }}
+        >
+          {languages[lng as keyof typeof languages].nativeName}
+        </Button>
+      ))}
+    </div>
+  )
 }
