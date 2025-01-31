@@ -1,0 +1,205 @@
+LINK MASTER - FEATURE & TEXT MAP
+
+🌟 CORE FUNCTIONALITY
+===================
+Create shareable collections of links that can be opened all at once!
+- Create a list of URLs
+- Get a unique shareable link
+- Share with anyone
+- Recipients can open all links with one click
+- No account needed to view or use shared lists
+
+📋 LIST CREATION
+===============
+1. Create New List
+   - Enter list name
+   - Add URLs individually with comments
+   - OR paste multiple URLs in bulk mode
+   - Maximum 50 URLs per list
+   - Real-time URL validation
+   - Optional comments for each URL
+   - Switch between individual/bulk modes
+   - Save list and get shareable link
+
+2. Bulk URL Input
+   - Paste multiple URLs at once
+   - One URL per line
+   - Automatic parsing and validation
+   - Convert to individual mode with comments
+   - Preserves valid URLs if some are invalid
+
+3. Individual URL Input
+   - Add URLs one by one
+   - Add optional comments
+   - Add more URL fields dynamically
+   - Remove individual URLs
+   - Validate URLs in real-time
+
+🔗 LINK SHARING
+==============
+1. Share Features
+   - Unique URL for each list
+   - Copy link button
+   - No expiration date
+   - No account needed to view
+   - Instant access for recipients
+
+2. Link Preview
+   - See all URLs in the list
+   - View comments for each URL
+   - Clean, organized layout
+   - Mobile-friendly view
+   - "Open All" button prominent
+
+3. Bulk Opening
+   - Open all URLs with one click
+   - Opens in separate tabs
+   - Browser pop-up permission handling
+   - Loading indicators
+   - Success/error notifications
+
+🎨 USER INTERFACE
+===============
+1. Navigation
+   - Create New List button
+   - Language selector
+   - Theme toggle (Light/Dark)
+   - Responsive menu
+   - Breadcrumb navigation
+
+2. Form Elements
+   - List name input
+   - URL input fields
+   - Comment fields
+   - Add/Remove URL buttons
+   - Mode toggle switch
+   - Submit button
+   - Clear form option
+
+3. Notifications
+   - Success messages
+   - Error alerts
+   - Validation feedback
+   - Copy confirmation
+   - Loading states
+
+4. Themes
+   - Light mode
+   - Dark mode
+   - System preference detection
+   - Smooth transitions
+   - Consistent styling
+
+🌐 INTERNATIONALIZATION
+=====================
+1. Languages
+   - English (default)
+   - Russian
+   - Easy to add new languages
+
+2. Translated Elements
+   - All UI text
+   - Buttons
+   - Form labels
+   - Error messages
+   - Success notifications
+   - Placeholders
+   - Help text
+
+📱 RESPONSIVE DESIGN
+==================
+1. Desktop
+   - Full-width layout
+   - Multi-column forms
+   - Hover effects
+   - Keyboard navigation
+   - Large click targets
+
+2. Tablet
+   - Adapted layout
+   - Touch-friendly
+   - Responsive grids
+   - Optimized spacing
+   - Maintained functionality
+
+3. Mobile
+   - Single-column layout
+   - Touch-optimized
+   - Collapsible sections
+   - Full functionality
+   - Easy scrolling
+
+🛠 TECHNICAL FEATURES
+===================
+1. Validation
+   - URL format checking
+   - Required fields
+   - Maximum URL limit
+   - Comment length
+   - List name requirements
+   - Real-time feedback
+
+2. Performance
+   - Fast loading
+   - Optimized bundle
+   - Lazy loading
+   - Efficient rendering
+   - Smooth animations
+
+3. Security
+   - URL sanitization
+   - XSS prevention
+   - Input validation
+   - Secure data handling
+   - Error boundaries
+
+4. Accessibility
+   - ARIA labels
+   - Keyboard navigation
+   - Screen reader support
+   - High contrast
+   - Focus management
+
+TEXT MAP
+========
+1. Headers & Titles
+   - "Link Master"
+   - "Create New List"
+   - "Your Links"
+   - "Share Links"
+   - "Open All"
+
+2. Form Labels
+   - "List Name"
+   - "Enter URL"
+   - "Comment (optional)"
+   - "Add Another URL"
+   - "Remove URL"
+
+3. Buttons
+   - "Save List"
+   - "Copy Share Link"
+   - "Open All URLs"
+   - "Switch to Bulk Mode"
+   - "Switch to Individual Mode"
+
+4. Messages
+   - "List saved successfully!"
+   - "Share link copied!"
+   - "Please enter a valid URL"
+   - "Maximum 50 URLs allowed"
+   - "Name is required"
+
+5. Placeholders
+   - "Enter list name..."
+   - "https://example.com"
+   - "Add a comment..."
+   - "Paste URLs here, one per line"
+   - "Optional description"
+
+6. Help Text
+   - "Create a collection of URLs to share"
+   - "Add up to 50 URLs"
+   - "Switch modes to paste multiple URLs"
+   - "Share this link with others"
+   - "Click to open all URLs" 
