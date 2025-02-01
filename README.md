@@ -1,6 +1,6 @@
 # 🔗 Link Master
 
-![Screenshot](https://i.ibb.co/Q3wdwbGG/screenshot-linkmaster.png)
+![Screenshot](https://i.ibb.co/B5dBQDjN/screenshot-link-master.png)
 
 > Share your link collections with style! ✨
 
