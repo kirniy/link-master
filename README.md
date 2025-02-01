@@ -1,5 +1,7 @@
 # 🔗 Link Master
 
+![Screenshot](https://i.ibb.co/pjs458d6/screencapture-link-8b9e6-web-app-2025-02-01-05-07-13.png)
+
 > Share your link collections with style! ✨
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://link-8b9e6.web.app)
