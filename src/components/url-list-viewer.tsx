@@ -45,97 +45,103 @@ export function UrlListViewer() {
     )
   }
 
-  const openAllUrls = () => {
-    const urls = linkList.urls.map(({ url }) => url)
-    
-    // Request permission to open multiple tabs
-    const confirmed = window.confirm(
-      t("openMultipleTabsConfirm", { count: urls.length })
-    )
-    
-    if (confirmed) {
-      urls.forEach((url) => {
-        try {
-          window.open(url, "_blank", "noopener,noreferrer")
-        } catch (error) {
-          console.error(`Failed to open URL: ${url}`, error)
-        }
-      })
+  const copyShareableLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: t('list.copy'),
+        description: t('list.copied')
+      });
+    } catch (err) {
+      toast({
+        title: t('error'),
+        description: t('copyLinkError'),
+        variant: 'destructive'
+      });
     }
-  }
+  };
 
-  const copyShareableLink = () => {
-    const url = window.location.href
-    navigator.clipboard.writeText(url).then(
-      () => {
-        toast({
-          title: t("linkCopied"),
-          description: t("linkCopiedDescription")
-        })
-      },
-      (err) => {
-        console.error("Failed to copy link:", err)
-        toast({
-          title: t("error"),
-          description: t("copyLinkError"),
-          variant: "destructive"
-        })
+  const openAllUrls = async () => {
+    const urls = linkList.urls.map(u => u.url);
+    if (!confirm(t('openMultipleTabsConfirm', { count: urls.length }))) {
+      return;
+    }
+
+    let failedCount = 0;
+    for (const url of urls) {
+      try {
+        const newWindow = window.open(url, '_blank');
+        if (!newWindow) {
+          failedCount++;
+        }
+        // Add a small delay between opening tabs to prevent browser blocking
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch {
+        failedCount++;
       }
-    )
-  }
+    }
+
+    if (failedCount > 0) {
+      toast({
+        title: t('error'),
+        description: t('errorOpeningUrl'),
+        variant: 'destructive'
+      });
+    }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="flex flex-col gap-4">
         <div className="space-y-1">
           <Link to="/" className="text-muted-foreground hover:text-foreground inline-flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t("backToHome")}
           </Link>
-          <h1 className="text-2xl font-bold">{linkList.name}</h1>
+          <h1 className="text-2xl font-bold break-words">{linkList.name}</h1>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={copyShareableLink}>
-            {t("copyLink")}
+        
+        <div className="flex flex-col gap-2 w-full">
+          <Button 
+            variant="default" 
+            size="lg"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 text-lg py-6"
+            onClick={openAllUrls}
+          >
+            {t('list.openAll')}
           </Button>
-          <Button onClick={openAllUrls}>
-            <ExternalLink className="mr-2 h-4 w-4" />
-            {t("openAll")}
+          <Button 
+            variant="outline" 
+            size="default"
+            className="w-full"
+            onClick={copyShareableLink}
+          >
+            {t('list.shareableLink')}
           </Button>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {linkList.urls.map(({ url, comment }, index) => (
-          <div key={index} className="p-4 border rounded-lg">
-            <div className="flex items-center justify-between gap-4">
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline break-all"
-              >
-                {url}
-              </a>
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                className="shrink-0"
-              >
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={t("openInNewTab")}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </Button>
-            </div>
-            {comment && (
-              <p className="mt-2 text-muted-foreground">{comment}</p>
-            )}
+      <div className="grid gap-4">
+        {linkList.urls.map((entry, index) => (
+          <div key={index} className="group relative">
+            <a
+              href={entry.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-4 rounded-lg border bg-card hover:bg-accent transition-colors"
+            >
+              {entry.comment && (
+                <div className="mb-3 font-medium text-foreground/90 break-words">
+                  {entry.comment}
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="text-primary hover:underline break-all flex-1">
+                  {entry.url}
+                </span>
+                <ExternalLink className="h-4 w-4 shrink-0 text-primary" />
+              </div>
+            </a>
           </div>
         ))}
       </div>

@@ -91,3 +91,64 @@ body {
 .neon-border {
   animation: neonGlow 2s ease-in-out infinite;
 }
+
+.snake-border-container {
+  position: relative;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    #ffaa40 0%,
+    #9c40ff 50%,
+    #ffaa40 100%
+  );
+  background-size: 200% 100%;
+  animation: moveGradient 3s linear infinite;
+  border-radius: 4px;
+}
+
+.snake-border-content {
+  background: var(--background);
+  border-radius: 3px;
+  padding: 8px;
+}
+
+.nav-gradient-container {
+  position: relative;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    #ffaa40 0%,
+    #9c40ff 50%,
+    #ffaa40 100%
+  );
+  background-size: 200% 100%;
+  animation: moveGradient 8s linear infinite;
+}
+
+.nav-gradient-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  filter: blur(8px);
+  opacity: 0.7;
+  z-index: -1;
+}
+
+.nav-gradient-content {
+  background: var(--background);
+  backdrop-filter: blur(8px);
+}
+
+.dark .nav-gradient-content {
+  background: hsl(var(--background) / 0.8);
+}
+
+@keyframes moveGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}

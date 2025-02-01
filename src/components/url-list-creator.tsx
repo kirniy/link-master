@@ -8,112 +8,181 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from '@/components/ui/use-toast';
-
-const urlSchema = z.object({
-  url: z.string().url(),
-  comment: z.string().optional()
-});
+import { BorderBeam } from '@/components/ui/border-beam';
 
 const formSchema = z.object({
   name: z.string().min(1),
-  urls: z.array(urlSchema).min(1)
+  urls: z.array(z.object({
+    url: z.string().url(),
+    comment: z.string().optional()
+  })).min(1)
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 export function UrlListCreator() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const createList = useStore((state) => state.createList);
-  const [urlCount, setUrlCount] = useState(1);
+  const { t } = useTranslation();
+  const [urlsText, setUrlsText] = useState('');
+  const [urlComments, setUrlComments] = useState<{ [url: string]: string }>({});
 
-  const form = useForm<FormValues>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      urls: [{ url: '', comment: '' }]
+      urls: []
     }
   });
 
-  async function onSubmit(data: FormValues) {
+  const processUrls = (text: string) => {
+    const urls = text
+      .split(/[\n,]/)
+      .map(url => url.trim())
+      .filter(url => url.length > 0)
+      .map(url => url.startsWith('http') ? url : `https://${url}`);
+
+    console.log('Processed URLs:', urls);
+    return urls.map(url => ({
+      url,
+      comment: urlComments[url] || ''
+    }));
+  };
+
+  const onSubmit = async () => {
+    const name = form.getValues('name');
+    if (!name) {
+      toast({
+        title: t('error'),
+        description: t('listNameRequired'),
+        variant: 'destructive'
+      });
+      return;
+    }
+
     try {
-      const id = await createList(data);
+      const urls = processUrls(urlsText);
+      console.log('Submitting with comments:', urls);
+      
+      if (urls.length === 0) {
+        toast({
+          title: t('error'),
+          description: t('noUrlsProvided'),
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      const id = await createList({
+        name,
+        urls
+      });
+
       toast({
         title: t('listCreated'),
         description: t('listCreatedDescription')
       });
       navigate(`/list/${id}`);
     } catch (error) {
+      console.error('Error submitting:', error);
       toast({
         title: t('error'),
         description: (error as Error).message,
         variant: 'destructive'
       });
     }
-  }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      onSubmit();
+    }
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('listName')}</FormLabel>
-              <FormControl>
-                <Input placeholder={t('listNamePlaceholder')} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {Array.from({ length: urlCount }).map((_, index) => (
-          <div key={index} className="space-y-4">
-            <FormField
-              control={form.control}
-              name={`urls.${index}.url`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('url')} {index + 1}</FormLabel>
-                  <FormControl>
-                    <Input type="url" placeholder="https://example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name={`urls.${index}.comment`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('comment')} ({t('optional')})</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder={t('commentPlaceholder')} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        ))}
-
-        <div className="flex gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setUrlCount((count) => count + 1)}
-          >
-            {t('addAnotherUrl')}
-          </Button>
-          <Button type="submit">{t('createList')}</Button>
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-2">{t('app.title')}</h1>
+          <p className="text-muted-foreground text-lg">{t('app.description')}</p>
         </div>
-      </form>
+
+        <div className="grid gap-6">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-base">{t('listName')}</FormLabel>
+                <FormControl>
+                  <div className="relative rounded-lg">
+                    <Input 
+                      placeholder={t('listNamePlaceholder')} 
+                      {...field} 
+                      className="bg-background text-lg h-12"
+                    />
+                    <BorderBeam delay={1} />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormItem>
+            <FormLabel className="text-base">{t('bulkUrls')}</FormLabel>
+            <FormControl>
+              <div className="relative rounded-lg">
+                <Textarea
+                  placeholder={t('bulkUrlsPlaceholder')}
+                  className="min-h-[200px] bg-background text-base resize-y font-mono"
+                  value={urlsText}
+                  onChange={(e) => setUrlsText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+                <BorderBeam delay={2} />
+              </div>
+            </FormControl>
+            <FormDescription className="text-sm">
+              {t('bulkUrlsHelp')}
+              <br />
+              {t('pressEnterToSubmit')}
+            </FormDescription>
+          </FormItem>
+
+          <div className="space-y-4">
+            {processUrls(urlsText).map((entry) => (
+              <div key={entry.url} className="space-y-2 bg-card p-4 rounded-lg border">
+                <div className="text-sm font-medium text-foreground break-all">
+                  {entry.url}
+                </div>
+                <Textarea
+                  placeholder={t('commentPlaceholder')}
+                  className="h-20 resize-none bg-background text-sm"
+                  value={urlComments[entry.url] || ''}
+                  onChange={(e) => {
+                    console.log('Setting comment for URL:', entry.url);
+                    setUrlComments(prev => ({
+                      ...prev,
+                      [entry.url]: e.target.value
+                    }));
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+          <Button 
+            type="button" 
+            size="lg" 
+            className="w-full text-lg"
+            onClick={onSubmit}
+          >
+            {t('createList')}
+          </Button>
+        </div>
+      </div>
     </Form>
   );
 }
